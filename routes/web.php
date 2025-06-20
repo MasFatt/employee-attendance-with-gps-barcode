@@ -12,19 +12,28 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
 
+// =======================
+// ROUTE UTAMA (LOGIN)
+// =======================
 Route::get('/', function () {
-    // return view('welcome');
     return redirect('/login');
 });
 
+// =======================
+// ROUTE DENGAN AUTH & VERIFIED
+// =======================
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
+
+    // Redirect user berdasarkan rolenya
     Route::get('/', fn () => Auth::user()->isAdmin ? redirect('/admin') : redirect('/home'));
 
+    // =======================
     // USER AREA
+    // =======================
     Route::middleware('user')->group(function () {
         Route::get('/home', HomeController::class)->name('home');
 
@@ -37,14 +46,18 @@ Route::middleware([
             ->name('attendance-history');
     });
 
+    // =======================
     // ADMIN AREA
+    // =======================
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/', fn () => redirect('/admin/dashboard'));
+
+        // Dashboard
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('admin.dashboard');
 
-        // Barcode
+        // Barcode Management
         Route::resource('/barcodes', BarcodeController::class)
             ->only(['index', 'show', 'create', 'store', 'edit', 'update'])
             ->names([
@@ -60,12 +73,12 @@ Route::middleware([
         Route::get('/barcodes/{id}/download', [BarcodeController::class, 'download'])
             ->name('admin.barcodes.download');
 
-        // User/Employee/Karyawan
+        // Employee Management
         Route::resource('/employees', EmployeeController::class)
             ->only(['index'])
             ->names(['index' => 'admin.employees']);
 
-        // Master Data
+        // Master Data Management
         Route::get('/masterdata/division', [MasterDataController::class, 'division'])
             ->name('admin.masters.division');
         Route::get('/masterdata/job-title', [MasterDataController::class, 'jobTitle'])
@@ -77,15 +90,13 @@ Route::middleware([
         Route::get('/masterdata/admin', [MasterDataController::class, 'admin'])
             ->name('admin.masters.admin');
 
-        // Presence/Absensi
+        // Attendance Management
         Route::get('/attendances', [AttendanceController::class, 'index'])
             ->name('admin.attendances');
-
-        // Presence/Absensi
         Route::get('/attendances/report', [AttendanceController::class, 'report'])
             ->name('admin.attendances.report');
 
-        // Import/Export
+        // Import Export
         Route::get('/import-export/users', [ImportExportController::class, 'users'])
             ->name('admin.import-export.users');
         Route::get('/import-export/attendances', [ImportExportController::class, 'attendances'])
@@ -103,6 +114,9 @@ Route::middleware([
     });
 });
 
+// =======================
+// Livewire Custom Routes
+// =======================
 Livewire::setUpdateRoute(function ($handle) {
     return Route::post(Helpers::getNonRootBaseUrlPath() . '/livewire/update', $handle);
 });

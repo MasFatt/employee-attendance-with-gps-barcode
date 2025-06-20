@@ -397,8 +397,9 @@
             @endif
 
             @error('form.photo')
-              <x-input-error for="form.photo" message="{{ $message }}" class="mt-2" />
-            @enderror
+            <x-input-error :message="$message" class="mt-2" />
+          @enderror
+
           </div>
         @endif
         <div class="mt-4">

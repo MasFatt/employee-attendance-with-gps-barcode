@@ -26,6 +26,7 @@ class AttendanceHistoryComponent extends Component
         $date = Carbon::parse($this->month);
 
         $start = Carbon::parse($this->month)->startOfMonth();
+        // $start = Carbon::now();
         $end = Carbon::parse($this->month)->endOfMonth();
         $dates = $start->range($end)->toArray();
 

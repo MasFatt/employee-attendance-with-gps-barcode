@@ -45,7 +45,7 @@ class UserForm extends Form
                 'max:255',
                 Rule::unique('users')->ignore($this->user)
             ],
-            'phone' => ['required',  'string', 'min:5', 'max:255'],
+            'phone' => ['required', 'string', 'min:5', 'max:255'],
             'password' => ['nullable', 'string', 'min:4', 'max:255'],
             'gender' => [$requiredOrNullable, 'in:male,female'],
             'city' => [$requiredOrNullable, 'string', 'max:255'],
@@ -96,7 +96,8 @@ class UserForm extends Form
             'password' => Hash::make($this->password ?? 'password'),
             'raw_password' => $this->password ?? 'password',
         ]);
-        if (isset($this->photo)) $user->updateProfilePhoto($this->photo);
+        if (isset($this->photo))
+            $user->updateProfilePhoto($this->photo);
         $this->reset();
     }
 
@@ -111,7 +112,8 @@ class UserForm extends Form
             'password' => $this->password ? Hash::make($this->password) : $this->user?->password,
             'raw_password' => $this->password ?? $this->user?->raw_password,
         ]);
-        if (isset($this->photo)) $this->user->updateProfilePhoto($this->photo);
+        if (isset($this->photo))
+            $this->user->updateProfilePhoto($this->photo);
         $this->reset();
     }
 
@@ -123,15 +125,48 @@ class UserForm extends Form
         return $this->user->deleteProfilePhoto();
     }
 
-    public function delete()
-    {
-        if (!$this->isAllowed()) {
-            return abort(403);
-        }
-        $this->user->delete();
-        $this->deleteProfilePhoto();
-        $this->reset();
+
+//     public function delete()
+// {
+//     if (!$this->isAllowed()) {
+//         return abort(403);
+//     }
+
+//     if (!$this->user) {
+//         $this->addError('delete', 'User tidak ditemukan.');
+//         return;
+//     }
+
+//     try {
+//         // Hapus attendance terlebih dahulu
+//         $this->user->attendances()->delete();
+
+//         // Lalu hapus user
+//         $this->user->delete();
+
+//         // Hapus foto jika ada
+//         $this->deleteProfilePhoto();
+
+//         // Reset form dan UI
+//         $this->reset();
+//     } catch (\Throwable $e) {
+//         report($e);
+//         $this->addError('delete', 'Gagal menghapus: ' . $e->getMessage());
+//     }
+// }
+
+
+public function delete()
+{
+    if (!$this->isAllowed()) {
+        return abort(403);
     }
+
+    $this->user->delete();
+    $this->deleteProfilePhoto();
+    $this->reset();
+}
+
 
     private function isAllowed()
     {
