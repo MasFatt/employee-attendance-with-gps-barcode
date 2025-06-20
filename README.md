@@ -1,9 +1,5 @@
 # Aplikasi Web Absensi Karyawan QR Code GPS
 
-![Aplikasi Web Absensi Karyawan QR Code GPS](./screenshots/hero.png)
-
-Aplikasi web absensi karyawan menggunakan QR Code dan GPS.
-
 ## Teknologi yang Digunakan
 
 * [Laravel 11](https://laravel.com/)
