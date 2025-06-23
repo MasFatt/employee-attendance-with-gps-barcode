@@ -7,28 +7,6 @@
 
     @pushOnce('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script>
-        let currentMap = document.getElementById('currentMap');
-        let map = document.getElementById('map');
-
-        setTimeout(() => {
-            toggleMap();
-            toggleCurrentMap();
-        }, 1000);
-
-        function toggleCurrentMap() {
-            const mapIsVisible = currentMap.style.display === "none";
-            currentMap.style.display = mapIsVisible ? "block" : "none";
-            document.querySelector('#toggleCurrentMap').innerHTML = mapIsVisible ?
-                `<x-heroicon-s-chevron-up class="mr-2 h-5 w-5" />` :
-                `<x-heroicon-s-chevron-down class="mr-2 h-5 w-5" />`;
-        }
-
-        function toggleMap() {
-            const mapIsVisible = map.style.display === "none";
-            map.style.display = mapIsVisible ? "block" : "none";
-        }
-    </script>
     @endpushOnce
 
     @if (!$isAbsence)
@@ -40,23 +18,20 @@
             <!-- Left: Shift & Scanner -->
             <div class="flex flex-col gap-4 w-full md:w-1/2">
                 <div>
-                    <x-select id="shift" class="mt-1 block w-full" wire:model="shift_id"
-                        disabled="{{ !is_null($attendance) }}">
+                    <x-select id="shift" class="mt-1 block w-full" wire:model="shift_id" :disabled="!is_null($attendance)">
                         <option value="">{{ __('Select Shift') }}</option>
                         @foreach ($shifts as $shift)
-                            <option value="{{ $shift->id }}" {{ $shift->id == $shift_id ? 'selected' : '' }}>
+                            <option value="{{ $shift->id }}" @selected($shift->id == $shift_id)>
                                 {{ $shift->name . ' | ' . $shift->start_time . ' - ' . $shift->end_time }}
                             </option>
                         @endforeach
                     </x-select>
                     @error('shift_id')
-                        <x-input-error for="shift" class="mt-2" message={{ $message }} />
+                        <x-input-error for="shift" class="mt-2" :message="$message" />
                     @enderror
                 </div>
-                <div class="flex justify-center rounded-md border border-dashed border-gray-400 dark:border-slate-600 bg-white dark:bg-gray-800 p-4"
-                    wire:ignore>
-                    <div id="scanner" class="min-h-72 sm:min-h-96 w-72 sm:w-96 rounded-md">
-                    </div>
+                <div class="flex justify-center rounded-md border border-dashed border-gray-400 dark:border-slate-600 bg-white dark:bg-gray-800 p-4" wire:ignore>
+                    <div id="scanner" class="min-h-72 sm:min-h-96 w-72 sm:w-96 rounded-md"></div>
                 </div>
             </div>
         @endif
@@ -65,8 +40,7 @@
         <div class="w-full">
             <div class="mb-4">
                 <h4 id="scanner-error" class="text-lg font-semibold text-red-500 dark:text-red-400" wire:ignore></h4>
-                <h4 id="scanner-result" class="hidden text-lg font-semibold text-green-500 dark:text-green-400"
-                    wire:ignore>
+                <h4 id="scanner-result" class="hidden text-lg font-semibold text-green-500 dark:text-green-400" wire:ignore>
                     {{ $successMsg }}
                 </h4>
                 <div class="text-base text-gray-700 dark:text-gray-100 mb-3">
@@ -75,12 +49,10 @@
 
                 @if (!is_null($currentLiveCoords))
                     <div class="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
-                        <a href="{{ \App\Helpers::getGoogleMapsUrl($currentLiveCoords[0], $currentLiveCoords[1]) }}"
-                            target="_blank" class="underline hover:text-blue-500">
+                        <a href="{{ \App\Helpers::getGoogleMapsUrl($currentLiveCoords[0], $currentLiveCoords[1]) }}" target="_blank" class="underline hover:text-blue-500">
                             {{ __('Your location') . ': ' . $currentLiveCoords[0] . ', ' . $currentLiveCoords[1] }}
                         </a>
-                        <button class="ml-4 text-gray-600 hover:text-indigo-500" onclick="toggleCurrentMap()"
-                            id="toggleCurrentMap">
+                        <button class="ml-4 text-gray-600 hover:text-indigo-500" onclick="toggleCurrentMap()" id="toggleCurrentMapBtn">
                             <x-heroicon-s-chevron-down class="h-5 w-5" />
                         </button>
                     </div>
@@ -92,59 +64,59 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
                 <!-- Absen Masuk -->
-                <div
-                    class="bg-blue-500/10 border border-blue-400 dark:border-blue-600 rounded-lg p-5 text-blue-700 dark:text-blue-300 shadow hover:shadow-md transition duration-300 hover:scale-[1.02]">
+                <div class="bg-blue-500/10 border border-blue-400 dark:border-blue-600 rounded-lg p-5 text-blue-700 dark:text-blue-300 shadow hover:shadow-md transition duration-300 hover:scale-[1.02]">
                     <div class="flex items-center gap-3 mb-2">
                         <x-heroicon-o-arrow-down-left class="h-6 w-6 text-blue-500 dark:text-blue-400" />
                         <h4 class="text-lg font-semibold">Absen Masuk</h4>
                     </div>
                     <p class="text-sm">
                         @if ($isAbsence)
-                            {{ __($attendance?->status) ?? '-' }}
+                            {{ __($attendance?->status ?? '-') }}
                         @else
-                            <span class="text-sm">
-                                {{ $attendance?->time_in ? Carbon::parse($attendance?->time_in)->format('H:i:s') : 'Belum Absen' }}
-                            </span>
+                            {{ $attendance?->time_in ? Carbon::parse($attendance->time_in)->format('H:i:s') : 'Belum Absen' }}
                         @endif
                     </p>
-                    @if ($attendance?->status == 'late')
+                    @if ($attendance?->status === 'late')
                         <p class="text-sm mt-1 text-red-600 dark:text-red-300">Terlambat: Ya</p>
                     @endif
                 </div>
 
                 <!-- Absen Keluar -->
-                <div
-                    class="bg-yellow-500/10 border border-yellow-400 dark:border-yellow-600 rounded-lg p-5 text-yellow-700 dark:text-yellow-300 shadow hover:shadow-md transition duration-300 hover:scale-[1.02]">
+                <div class="bg-yellow-500/10 border border-yellow-400 dark:border-yellow-600 rounded-lg p-5 text-yellow-700 dark:text-yellow-300 shadow hover:shadow-md transition duration-300 hover:scale-[1.02]">
                     <div class="flex items-center gap-3 mb-2">
                         <x-heroicon-o-arrow-up-right class="h-6 w-6 text-yellow-500 dark:text-yellow-400" />
                         <h4 class="text-lg font-semibold">Absen Keluar</h4>
                     </div>
                     <p class="text-sm">
                         @if ($isAbsence)
-                            {{ __($attendance?->status) ?? '-' }}
+                            {{ __($attendance?->status ?? '-') }}
                         @else
-                            <span class="text-sm">
-                                {{ $attendance?->time_out ? Carbon::parse($attendance?->time_out)->format('H:i:s') : 'Belum Absen' }}
-                            </span>
+                            {{ $attendance?->time_out ? Carbon::parse($attendance->time_out)->format('H:i:s') : 'Belum Absen' }}
                         @endif
                     </p>
                 </div>
 
                 <!-- Koordinat Absen -->
                 <button
+                    type="button"
                     class="bg-purple-500/10 border border-purple-400 dark:border-purple-600 rounded-lg p-5 text-purple-700 dark:text-purple-300 shadow hover:shadow-md transition duration-300 hover:scale-[1.02] w-full text-left flex items-start justify-between gap-3"
-                    {{ is_null($attendance?->lat_lng) ? 'disabled' : 'onclick=toggleMap()' }} id="toggleMap">
+                    @if (is_null($attendance?->latitude) || is_null($attendance?->longitude))
+                        disabled
+                    @else
+                        onclick="toggleMap()"
+                    @endif
+                    id="toggleMapBtn"
+                >
                     <div>
                         <div class="flex items-center gap-3 mb-2">
                             <x-heroicon-o-map-pin class="h-6 w-6 text-purple-500 dark:text-purple-400" />
                             <h4 class="text-lg font-semibold">Koordinat</h4>
                         </div>
-                        @if (is_null($attendance?->lat_lng))
+                        @if (is_null($attendance?->latitude) || is_null($attendance?->longitude))
                             <p class="text-sm">Belum Absen</p>
                         @else
-                            <a href="{{ \App\Helpers::getGoogleMapsUrl($attendance?->latitude, $attendance?->longitude) }}"
-                                target="_blank" class="underline hover:text-blue-500 text-sm">
-                                {{ $attendance?->latitude . ', ' . $attendance?->longitude }}
+                            <a href="{{ \App\Helpers::getGoogleMapsUrl($attendance->latitude, $attendance->longitude) }}" target="_blank" class="underline hover:text-blue-500 text-sm">
+                                {{ $attendance->latitude . ', ' . $attendance->longitude }}
                             </a>
                         @endif
                     </div>
@@ -156,201 +128,155 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <!-- Ajukan Izin -->
                 <a href="{{ route('apply-leave') }}" class="group">
-                    <div
-                        class="flex items-center justify-center gap-3 rounded-lg bg-amber-500/90 px-5 py-3 text-white font-semibold shadow-md group-hover:bg-amber-600 transition-all duration-200 ease-in-out hover:scale-105">
-                        <x-heroicon-o-envelope-open
-                            class="h-5 w-5 text-white transition group-hover:rotate-6 duration-300" />
+                    <div class="flex items-center justify-center gap-3 rounded bg-amber-500/90 px-4 py-2 text-white font-semibold shadow-md group-hover:bg-amber-600">
+                        {{-- <x-heroicon-o-envelope-open class="h-5 w-5 text-white transition group-hover:rotate-6 duration-300" /> --}}
                         <span>Ajukan Izin</span>
                     </div>
                 </a>
 
                 <!-- Riwayat Absen -->
                 <a href="{{ route('attendance-history') }}" class="group">
-                    <div
-                        class="flex items-center justify-center gap-3 rounded-lg bg-blue-500/90 px-5 py-3 text-white font-semibold shadow-md group-hover:bg-blue-600 transition-all duration-200 ease-in-out hover:scale-105">
-                        <x-heroicon-o-clock class="h-5 w-5 text-white transition group-hover:rotate-6 duration-300" />
+                    <div class="flex items-center justify-center gap-3 rounded bg-blue-500/90 px-4 py-2 text-white font-semibold shadow-md group-hover:bg-blue-600">
+                        {{-- <x-heroicon-o-clock class="h-5 w-5 text-white transition group-hover:rotate-6 duration-300" /> --}}
                         <span>Riwayat Absen</span>
                     </div>
                 </a>
-            </div>
 
+                <!-- Upload File QR -->
+                <input type="file" id="qr-file-input" accept="image/*" class="hidden" />
+                <button type="button" id="custom-upload-btn" class="block md:hidden px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition">Upload File QR</button>
+            </div>
         </div>
     </div>
+
+    {{-- Elemen dummy untuk Html5Qrcode scanFile --}}
+    <div id="qr-file-scanner" style="display:none;"></div>
 </div>
 
-
-@script
+@push('scripts')
 <script>
-    const errorMsg = document.querySelector('#scanner-error');
-    getLocation();
+    // Toggle currentMap visibility and icon
+    function toggleCurrentMap() {
+        const currentMap = document.getElementById('currentMap');
+        const toggleBtn = document.getElementById('toggleCurrentMapBtn');
+        const isHidden = currentMap.classList.contains('hidden');
 
-    async function getLocation() {
+        if (isHidden) {
+            currentMap.classList.remove('hidden');
+            toggleBtn.innerHTML = `<x-heroicon-s-chevron-up class="mr-2 h-5 w-5" />`;
+        } else {
+            currentMap.classList.add('hidden');
+            toggleBtn.innerHTML = `<x-heroicon-s-chevron-down class="mr-2 h-5 w-5" />`;
+        }
+    }
+
+    // Toggle attendance map visibility
+    function toggleMap() {
+        const map = document.getElementById('map');
+        if (!map) return;
+        const isHidden = map.classList.contains('hidden');
+        if (isHidden) {
+            map.classList.remove('hidden');
+        } else {
+            map.classList.add('hidden');
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const qrInput = document.getElementById("qr-file-input");
+        const customUploadBtn = document.getElementById("custom-upload-btn");
+        const errorMsg = document.getElementById('scanner-error');
+        const successMsg = document.getElementById('scanner-result');
+
+        customUploadBtn?.addEventListener("click", () => {
+            qrInput?.click();
+        });
+
+        qrInput?.addEventListener("change", async (e) => {
+            if (e.target.files.length === 0) return;
+
+            const file = e.target.files[0];
+            const html5QrCode = new Html5Qrcode('qr-file-scanner');
+
+            try {
+                const decodedText = await html5QrCode.scanFile(file, true);
+                console.log("Decoded QR from file:", decodedText);
+
+                const scanResult = await @this.scan(decodedText);
+
+                if (scanResult === true) {
+                    successMsg.classList.remove('hidden');
+                    errorMsg.innerHTML = '';
+                } else if (typeof scanResult === 'string') {
+                    errorMsg.innerHTML = scanResult;
+                    successMsg.classList.add('hidden');
+                }
+
+                await html5QrCode.clear();
+            } catch (err) {
+                console.error("Failed to decode QR from file", err);
+                errorMsg.innerHTML = "Gagal membaca file QR";
+                successMsg.classList.add('hidden');
+            }
+        });
+
+        // Geolocation & Map Initialization
         if (navigator.geolocation) {
-            const map = L.map('currentMap');
+            const currentMap = L.map('currentMap');
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 21,
-            }).addTo(map);
+            }).addTo(currentMap);
+
             navigator.geolocation.watchPosition((position) => {
-                console.log(position);
-                $wire.$set('currentLiveCoords', [position.coords.latitude, position.coords.longitude]);
-                map.setView([
-                    Number(position.coords.latitude),
-                    Number(position.coords.longitude),
-                ], 13);
-                L.marker([position.coords.latitude, position.coords.longitude]).addTo(map);
+                @this.set('currentLiveCoords', [position.coords.latitude, position.coords.longitude]);
+                currentMap.setView([position.coords.latitude, position.coords.longitude], 13);
+                L.marker([position.coords.latitude, position.coords.longitude]).addTo(currentMap);
             }, (err) => {
                 console.error(`ERROR(${err.code}): ${err.message}`);
                 alert('{{ __('Please enable your location') }}');
             });
         } else {
-            document.querySelector('#scanner-error').innerHTML = "Gagal mendeteksi lokasi";
+            errorMsg.innerHTML = "Gagal mendeteksi lokasi";
         }
-    }
 
-    if (!$wire.isAbsence) {
+        @if (!$isAbsence)
+        // QR Scanner Initialization
         const scanner = new Html5Qrcode('scanner');
+        const errorMsgLive = document.getElementById('scanner-error');
 
         const config = {
             formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
             fps: 15,
             aspectRatio: 1,
-            qrbox: {
-                width: 280,
-                height: 280
-            },
+            qrbox: { width: 280, height: 280 },
             supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
         };
 
-        async function startScanning() {
-            if (scanner.getState() === Html5QrcodeScannerState.PAUSED) {
-                return scanner.resume();
-            }
-            await scanner.start({
-                facingMode: "environment"
-            },
-                config,
-                onScanSuccess,
-            );
-        }
-
-        async function onScanSuccess(decodedText, decodedResult) {
-            console.log(`Code matched = ${decodedText}`, decodedResult);
-
-            if (scanner.getState() === Html5QrcodeScannerState.SCANNING) {
-                scanner.pause(true);
-            }
-
-            if (!(await checkTime())) {
-                await startScanning();
-                return;
-            }
-
-            const result = await $wire.scan(decodedText);
-
-            if (result === true) {
-                return onAttendanceSuccess();
-            } else if (typeof result === 'string') {
-                errorMsg.innerHTML = result;
-            }
-
-            setTimeout(async () => {
-                await startScanning();
-            }, 500);
-        }
-
-        async function checkTime() {
-            const attendance = await $wire.getAttendance();
-
-            if (attendance) {
-                const timeIn = new Date(attendance.time_in).valueOf();
-                const diff = (Date.now() - timeIn) / (1000 * 3600);
-                const minAttendanceTime = 1;
-                console.log(`Difference = ${diff}`);
-                if (diff <= minAttendanceTime) {
-                    const timeIn = new Date(attendance.time_in).toLocaleTimeString([], {
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        second: 'numeric',
-                        hour12: false,
+        function startScanner() {
+            Html5Qrcode.getCameras().then(cameras => {
+                if (cameras && cameras.length) {
+                    let cameraId = cameras[0].id;
+                    scanner.start(cameraId, config, async (decodedText) => {
+                        console.log(`QR decoded: ${decodedText}`);
+                        const res = await @this.scan(decodedText);
+                        if (res === true) {
+                            errorMsgLive.textContent = '';
+                        } else if (typeof res === 'string') {
+                            errorMsgLive.textContent = res;
+                        }
+                    }).catch(err => {
+                        errorMsgLive.textContent = 'Failed to start scanner: ' + err;
                     });
-                    const confirmation = confirm(
-                        `Anda baru saja absen pada ${timeIn}, apakah ingin melanjutkan untuk absen keluar?`
-                    );
-                    return confirmation;
+                } else {
+                    errorMsgLive.textContent = 'Camera not found';
                 }
-            }
-            return true;
+            }).catch(err => {
+                errorMsgLive.textContent = 'Camera access denied: ' + err;
+            });
         }
 
-        function onAttendanceSuccess() {
-            scanner.stop();
-            errorMsg.innerHTML = '';
-            document.querySelector('#scanner-result').classList.remove('hidden');
-        }
-
-        const observer = new MutationObserver((mutationList, observer) => {
-            const classes = ['text-white', 'bg-blue-500', 'dark:bg-blue-400', 'rounded-md', 'px-3', 'py-1'];
-            for (const mutation of mutationList) {
-                if (mutation.type === 'childList') {
-                    const startBtn = document.querySelector('#html5-qrcode-button-camera-start');
-                    const stopBtn = document.querySelector('#html5-qrcode-button-camera-stop');
-                    const fileBtn = document.querySelector('#html5-qrcode-button-file-selection');
-                    const permissionBtn = document.querySelector('#html5-qrcode-button-camera-permission');
-
-                    if (startBtn) {
-                        startBtn.classList.add(...classes);
-                        stopBtn.classList.add(...classes, 'bg-red-500');
-                        fileBtn.classList.add(...classes);
-                    }
-
-                    if (permissionBtn)
-                        permissionBtn.classList.add(...classes);
-                }
-            }
-        });
-
-        observer.observe(document.querySelector('#scanner'), {
-            childList: true,
-            subtree: true,
-        });
-
-        const shift = document.querySelector('#shift');
-        const msg = 'Pilih shift terlebih dahulu';
-        let isRendered = false;
-        setTimeout(() => {
-            if (!shift.value) {
-                errorMsg.innerHTML = msg;
-            } else {
-                startScanning();
-                isRendered = true;
-            }
-        }, 1000);
-        shift.addEventListener('change', () => {
-            if (!isRendered) {
-                startScanning();
-                isRendered = true;
-                errorMsg.innerHTML = '';
-            }
-            if (!shift.value) {
-                scanner.pause(true);
-                errorMsg.innerHTML = msg;
-            } else if (scanner.getState() === Html5QrcodeScannerState.PAUSED) {
-                scanner.resume();
-                errorMsg.innerHTML = '';
-            }
-        });
-
-        const map = L.map('map').setView([
-            Number({{ $attendance?->latitude }}),
-            Number({{ $attendance?->longitude }}),
-        ], 13);
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 21,
-        }).addTo(map);
-        L.marker([
-            Number({{ $attendance?->latitude }}),
-            Number({{ $attendance?->longitude }}),
-        ]).addTo(map);
-    }
+        startScanner();
+        @endif
+    });
 </script>
-@endscript
+@endpush
